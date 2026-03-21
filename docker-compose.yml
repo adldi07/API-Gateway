@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # ─── PostgreSQL ───────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gateway
+      POSTGRES_PASSWORD: gateway_secret
+      POSTGRES_DB: api_gateway
+    ports:
+      - '5433:5432'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U gateway -d api_gateway']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── Redis ────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── Gateway (uncomment after Phase 1 is working locally) ────────
+  # gateway:
+  #   build: ./gateway
+  #   restart: unless-stopped
+  #   ports:
+  #     - '3001:3001'
+  #   environment:
+  #     PORT: 3001
+  #     NODE_ENV: production
+  #     ADMIN_SECRET: ${ADMIN_SECRET}
+  #     PG_HOST: postgres
+  #     PG_PORT: 5432
+  #     PG_USER: gateway
+  #     PG_PASSWORD: gateway_secret
+  #     PG_DATABASE: api_gateway
+  #     REDIS_URL: redis://redis:6379
+  #     REDIS_FAIL_MODE: open
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+  # ─── Dashboard (uncomment after Phase 4) ────────────────────────
+  # dashboard:
+  #   build: ./dashboard
+  #   restart: unless-stopped
+  #   ports:
+  #     - '3000:3000'
+  #   environment:
+  #     NEXT_PUBLIC_GATEWAY_URL: http://gateway:3001
+  #     GATEWAY_ADMIN_SECRET: ${ADMIN_SECRET}
+  #   depends_on:
+  #     - gateway
+
+volumes:
+  pg_data:
+  redis_data:
