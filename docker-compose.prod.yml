@@ -30,8 +30,7 @@ services:
   gateway:
     image: ${GATEWAY_IMAGE}
     restart: unless-stopped
-    ports:
-      - '3001:3001'
+    # Removed ports 3001:3001 so it's only accessible internally via Caddy
     environment:
       PORT: 3001
       NODE_ENV: production
@@ -51,16 +50,16 @@ services:
       redis:
         condition: service_healthy
 
-  dashboard:
-    image: ${DASHBOARD_IMAGE}
+  caddy:
+    image: caddy:2-alpine
     restart: unless-stopped
     ports:
-      - '3000:3000'
-    environment:
-      NEXT_PUBLIC_GATEWAY_URL: ${NEXT_PUBLIC_GATEWAY_URL}
-      GATEWAY_URL: http://gateway:3001
-      GATEWAY_ADMIN_SECRET: ${ADMIN_SECRET}
-      NODE_ENV: production
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       gateway:
         condition: service_started
@@ -68,3 +67,5 @@ services:
 volumes:
   pg_data:
   redis_data:
+  caddy_data:
+  caddy_config:

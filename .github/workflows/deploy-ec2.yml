@@ -18,7 +18,6 @@ jobs:
       packages: write
     outputs:
       gateway_image: ${{ steps.meta.outputs.gateway_image }}
-      dashboard_image: ${{ steps.meta.outputs.dashboard_image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,7 +35,6 @@ jobs:
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           REPO=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
           echo "gateway_image=${{ env.REGISTRY }}/${OWNER}/${REPO}-gateway:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          echo "dashboard_image=${{ env.REGISTRY }}/${OWNER}/${REPO}-dashboard:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Build & Push Gateway
         uses: docker/build-push-action@v5
@@ -45,14 +43,6 @@ jobs:
           file: ./gateway/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.gateway_image }}
-          
-      - name: Build & Push Dashboard
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./dashboard/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.dashboard_image }}
 
   deploy:
     name: Deploy to EC2
@@ -75,17 +65,15 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           GATEWAY_IMAGE: ${{ needs.build-and-push.outputs.gateway_image }}
-          DASHBOARD_IMAGE: ${{ needs.build-and-push.outputs.dashboard_image }}
           ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
           PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
-          NEXT_PUBLIC_GATEWAY_URL: ${{ secrets.NEXT_PUBLIC_GATEWAY_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: GATEWAY_IMAGE,DASHBOARD_IMAGE,ADMIN_SECRET,PG_PASSWORD,NEXT_PUBLIC_GATEWAY_URL,GITHUB_TOKEN,GITHUB_ACTOR
+          envs: GATEWAY_IMAGE,ADMIN_SECRET,PG_PASSWORD,GITHUB_TOKEN,GITHUB_ACTOR
           script: |
             set -e
             cd /home/${{ secrets.EC2_USER }}/api-gateway
@@ -93,10 +81,8 @@ jobs:
             # Configure Docker environment
             cat > .env <<EOF
             GATEWAY_IMAGE=${GATEWAY_IMAGE}
-            DASHBOARD_IMAGE=${DASHBOARD_IMAGE}
             ADMIN_SECRET=${ADMIN_SECRET}
             PG_PASSWORD=${PG_PASSWORD}
-            NEXT_PUBLIC_GATEWAY_URL=${NEXT_PUBLIC_GATEWAY_URL}
             EOF
 
             # Login to repository and pull the latest assets
@@ -111,7 +97,7 @@ jobs:
             # Execute database migrations
             docker compose -f docker-compose.prod.yml run --rm gateway npm run migrate:prod
 
-            # Spin up Gateway and Dashboard
+            # Spin up Gateway and Caddy
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
             # Tidy up the old unused container artifacts

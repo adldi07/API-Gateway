@@ -1,0 +1,7 @@
+13-127-252-167.sslip.io {
+    reverse_proxy gateway:3001 {
+        transport http {
+            read_timeout 300s
+        }
+    }
+}
