@@ -1,0 +1,33 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+# Load all workspaces
+COPY package.json package-lock.json ./
+COPY gateway/package.json ./gateway/
+COPY shared/package.json ./shared/
+COPY dashboard/package.json ./dashboard/
+RUN npm ci
+
+# Source and build
+COPY gateway/ ./gateway/
+COPY shared/ ./shared/
+RUN npm run build:gateway
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Install only production dependencies
+COPY package.json package-lock.json ./
+COPY gateway/package.json ./gateway/
+COPY shared/package.json ./shared/
+COPY dashboard/package.json ./dashboard/
+RUN npm ci --omit=dev
+
+# Output files
+COPY --from=builder /app/gateway/dist ./gateway/dist
+COPY --from=builder /app/gateway/src/rateLimit/lua ./gateway/src/rateLimit/lua
+COPY --from=builder /app/gateway/src/db/migrations ./gateway/dist/gateway/src/db/migrations
+
+WORKDIR /app/gateway
+EXPOSE 3001
+CMD ["npm", "run", "start"]

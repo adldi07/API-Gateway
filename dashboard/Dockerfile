@@ -1,0 +1,24 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY gateway/package.json ./gateway/
+COPY shared/package.json ./shared/
+COPY dashboard/package.json ./dashboard/
+RUN npm ci
+
+COPY dashboard/ ./dashboard/
+COPY shared/ ./shared/
+RUN npm run build:dashboard
+
+FROM node:20-alpine AS runner
+WORKDIR /app/dashboard
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+COPY --from=builder /app/dashboard/.next/standalone ./
+COPY --from=builder /app/dashboard/.next/static ./.next/static
+COPY --from=builder /app/dashboard/public ./public
+
+EXPOSE 3000
+CMD ["node", "server.js"]
