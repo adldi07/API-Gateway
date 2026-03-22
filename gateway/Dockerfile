@@ -5,7 +5,7 @@ COPY package.json package-lock.json* ./
 COPY gateway/package.json ./gateway/
 COPY shared/package.json ./shared/
 COPY dashboard/package.json ./dashboard/
-RUN npm i --no-fund --no-audit
+RUN rm -f package-lock.json && npm i --include=optional --no-fund --no-audit
 
 # Source and build
 COPY gateway/ ./gateway/
@@ -21,7 +21,7 @@ COPY package.json package-lock.json* ./
 COPY gateway/package.json ./gateway/
 COPY shared/package.json ./shared/
 COPY dashboard/package.json ./dashboard/
-RUN npm i --omit=dev --no-fund --no-audit
+RUN rm -f package-lock.json && npm i --omit=dev --include=optional --no-fund --no-audit
 
 # Output files
 COPY --from=builder /app/gateway/dist ./gateway/dist

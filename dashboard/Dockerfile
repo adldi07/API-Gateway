@@ -4,7 +4,7 @@ COPY package.json package-lock.json* ./
 COPY gateway/package.json ./gateway/
 COPY shared/package.json ./shared/
 COPY dashboard/package.json ./dashboard/
-RUN npm i --no-fund --no-audit
+RUN rm -f package-lock.json && npm i --include=optional --no-fund --no-audit
 
 COPY dashboard/ ./dashboard/
 COPY shared/ ./shared/
