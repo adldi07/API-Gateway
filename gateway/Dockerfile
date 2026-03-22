@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 # Load all workspaces
 COPY package.json package-lock.json* ./
@@ -12,7 +12,7 @@ COPY gateway/ ./gateway/
 COPY shared/ ./shared/
 RUN npm run build:gateway
 
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 

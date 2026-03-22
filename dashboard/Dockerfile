@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY gateway/package.json ./gateway/
@@ -10,7 +10,7 @@ COPY dashboard/ ./dashboard/
 COPY shared/ ./shared/
 RUN npm run build:dashboard
 
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app/dashboard
 ENV NODE_ENV=production
 ENV PORT=3000
