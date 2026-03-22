@@ -17,10 +17,10 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Monorepo standalone output preserves the full directory tree:
-#   .next/standalone/          → root node_modules + package.json
-#   .next/standalone/app/dashboard/ → server.js + dashboard node_modules
-COPY --from=builder /app/dashboard/.next/standalone/app/dashboard ./
+# Monorepo standalone output mirrors paths relative to workspace root (/app):
+#   .next/standalone/              → root node_modules + package.json
+#   .next/standalone/dashboard/    → server.js + dashboard node_modules
+COPY --from=builder /app/dashboard/.next/standalone/dashboard ./
 COPY --from=builder /app/dashboard/.next/standalone/node_modules ./node_modules
 COPY --from=builder /app/dashboard/.next/static ./.next/static
 COPY --from=builder /app/dashboard/public ./public
