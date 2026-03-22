@@ -33,40 +33,48 @@ services:
       timeout: 3s
       retries: 5
 
-  # ─── Gateway (uncomment after Phase 1 is working locally) ────────
-  # gateway:
-  #   build: ./gateway
-  #   restart: unless-stopped
-  #   ports:
-  #     - '3001:3001'
-  #   environment:
-  #     PORT: 3001
-  #     NODE_ENV: production
-  #     ADMIN_SECRET: ${ADMIN_SECRET}
-  #     PG_HOST: postgres
-  #     PG_PORT: 5432
-  #     PG_USER: gateway
-  #     PG_PASSWORD: gateway_secret
-  #     PG_DATABASE: api_gateway
-  #     REDIS_URL: redis://redis:6379
-  #     REDIS_FAIL_MODE: open
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
+  # ─── Gateway ────────────────────────────────────────────────────
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      ADMIN_SECRET: ${ADMIN_SECRET:-dev-admin-secret-123456}
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_USER: gateway
+      PG_PASSWORD: gateway_secret
+      PG_DATABASE: api_gateway
+      REDIS_URL: redis://redis:6379
+      REDIS_FAIL_MODE: open
+      BATCH_FLUSH_INTERVAL_MS: 5000
+      BATCH_MAX_SIZE: 100
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  # ─── Dashboard (uncomment after Phase 4) ────────────────────────
-  # dashboard:
-  #   build: ./dashboard
-  #   restart: unless-stopped
-  #   ports:
-  #     - '3000:3000'
-  #   environment:
-  #     NEXT_PUBLIC_GATEWAY_URL: http://gateway:3001
-  #     GATEWAY_ADMIN_SECRET: ${ADMIN_SECRET}
-  #   depends_on:
-  #     - gateway
+  # ─── Dashboard ─────────────────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      GATEWAY_URL: http://gateway:3001
+      GATEWAY_ADMIN_SECRET: ${ADMIN_SECRET:-dev-admin-secret-123456}
+      NEXT_PUBLIC_GATEWAY_URL: http://localhost:3001
+    depends_on:
+      gateway:
+        condition: service_started
 
 volumes:
   pg_data:

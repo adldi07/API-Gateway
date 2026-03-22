@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gateway
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: api_gateway
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U gateway -d api_gateway']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    image: ${GATEWAY_IMAGE}
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      ADMIN_SECRET: ${ADMIN_SECRET}
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_USER: gateway
+      PG_PASSWORD: ${PG_PASSWORD}
+      PG_DATABASE: api_gateway
+      REDIS_URL: redis://redis:6379
+      REDIS_FAIL_MODE: open
+      BATCH_FLUSH_INTERVAL_MS: 5000
+      BATCH_MAX_SIZE: 100
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  dashboard:
+    image: ${DASHBOARD_IMAGE}
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NEXT_PUBLIC_GATEWAY_URL: ${NEXT_PUBLIC_GATEWAY_URL}
+      GATEWAY_URL: http://gateway:3001
+      GATEWAY_ADMIN_SECRET: ${ADMIN_SECRET}
+      NODE_ENV: production
+    depends_on:
+      gateway:
+        condition: service_started
+
+volumes:
+  pg_data:
+  redis_data:
