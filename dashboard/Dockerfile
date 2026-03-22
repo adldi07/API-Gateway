@@ -8,6 +8,7 @@ RUN rm -f package-lock.json && npm i --include=optional --no-fund --no-audit
 
 COPY dashboard/ ./dashboard/
 COPY shared/ ./shared/
+RUN mkdir -p /app/dashboard/public
 RUN npm run build:dashboard
 
 FROM node:20-slim AS runner
