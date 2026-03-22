@@ -37,9 +37,17 @@ app.use(requestIdMiddleware);
 app.get('/health', async (_req, res) => {
   const [pg, redis] = await Promise.all([pgHealthCheck(), redisHealthCheck()]);
   const healthy = pg && redis;
+  
   res.status(healthy ? 200 : 503).json({
     status: healthy ? 'healthy' : 'degraded',
-    services: { postgres: pg ? 'up' : 'down', redis: redis ? 'up' : 'down' },
+    services: { 
+      postgres: pg ? 'up' : 'down', 
+      redis: redis ? 'up' : 'down' 
+    },
+    metrics: {
+      uptimeSeconds: Math.round(process.uptime()),
+      memoryUsageMB: Math.round(process.memoryUsage().rss / 1024 / 1024)
+    },
     timestamp: new Date().toISOString(),
   });
 });
