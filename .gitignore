@@ -28,3 +28,6 @@ redis_data/
 
 # Failed batch writes (Phase 3)
 gateway/data/failed_batches/
+
+# Secrets
+*.pem
