@@ -1,11 +1,11 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 # Load all workspaces
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* ./
 COPY gateway/package.json ./gateway/
 COPY shared/package.json ./shared/
 COPY dashboard/package.json ./dashboard/
-RUN npm ci
+RUN npm i --no-fund --no-audit
 
 # Source and build
 COPY gateway/ ./gateway/
@@ -17,11 +17,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install only production dependencies
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* ./
 COPY gateway/package.json ./gateway/
 COPY shared/package.json ./shared/
 COPY dashboard/package.json ./dashboard/
-RUN npm ci --omit=dev
+RUN npm i --omit=dev --no-fund --no-audit
 
 # Output files
 COPY --from=builder /app/gateway/dist ./gateway/dist

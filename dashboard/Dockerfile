@@ -1,10 +1,10 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* ./
 COPY gateway/package.json ./gateway/
 COPY shared/package.json ./shared/
 COPY dashboard/package.json ./dashboard/
-RUN npm ci
+RUN npm i --no-fund --no-audit
 
 COPY dashboard/ ./dashboard/
 COPY shared/ ./shared/
