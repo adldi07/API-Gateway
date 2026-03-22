@@ -2,9 +2,10 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 # Load all workspaces
 COPY package.json package-lock.json* ./
+# Optimize: Remove 'dashboard' from workspaces so we don't install React/Next.js dependencies!
+RUN node -e "let p=require('./package.json'); p.workspaces=p.workspaces.filter(w=>w!=='dashboard'); require('fs').writeFileSync('./package.json', JSON.stringify(p))"
 COPY gateway/package.json ./gateway/
 COPY shared/package.json ./shared/
-COPY dashboard/package.json ./dashboard/
 RUN rm -f package-lock.json && npm i --include=optional --no-fund --no-audit
 
 # Source and build
@@ -18,9 +19,10 @@ ENV NODE_ENV=production
 
 # Install only production dependencies
 COPY package.json package-lock.json* ./
+# Optimize: Remove 'dashboard' from workspaces so we don't install React/Next.js dependencies!
+RUN node -e "let p=require('./package.json'); p.workspaces=p.workspaces.filter(w=>w!=='dashboard'); require('fs').writeFileSync('./package.json', JSON.stringify(p))"
 COPY gateway/package.json ./gateway/
 COPY shared/package.json ./shared/
-COPY dashboard/package.json ./dashboard/
 RUN rm -f package-lock.json && npm i --omit=dev --include=optional --no-fund --no-audit
 
 # Output files
