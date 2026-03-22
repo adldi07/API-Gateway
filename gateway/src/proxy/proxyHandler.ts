@@ -26,7 +26,12 @@ export async function proxyHandler(req: Request, res: Response, next: NextFuncti
   const proxyOptions: Options = {
     target: targetUrl,
     changeOrigin: true,
-    pathRewrite: () => rewrittenPath,
+    pathRewrite: (path, _req) => {
+      if (resolved.route.strip_prefix && path.startsWith(resolved.route.path_prefix)) {
+        return path.replace(resolved.route.path_prefix, '') || '/';
+      }
+      return path;
+    },
     selfHandleResponse: false,
     on: {
       proxyReq: (_proxyReq, _req) => {

@@ -21,7 +21,16 @@ startBatchWriter();
 // ─── Global middleware ───────────────────────────────────────────────
 app.use(cors());
 app.use(helmet());
-app.use(compression());
+app.use(
+  compression({
+    filter: (req, res) => {
+      if (req.path === '/admin/events') {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  })
+);
 app.use(requestIdMiddleware);
 
 // ─── Health check (no auth) ─────────────────────────────────────────

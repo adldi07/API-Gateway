@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { BATCH_DEFAULTS } from '../../../shared/constants';
 import { env } from '../config/env';
@@ -88,6 +90,22 @@ export function pushRequestLog(entry: RequestLogInsert) {
   }
 }
 
+async function writeFailedBatchToFile(batch: RequestLogInsert[]) {
+  try {
+    const dir = path.join(process.cwd(), 'data', 'failed_batches');
+    await fs.mkdir(dir, { recursive: true });
+    
+    const filename = `batch_${Date.now()}_${Math.random().toString(36).substring(7)}.json`;
+    const filepath = path.join(dir, filename);
+    
+    const payload = batch.map(b => JSON.stringify(b)).join('\n') + '\n';
+    await fs.writeFile(filepath, payload, 'utf-8');
+    console.warn(`Saved failed batch to ${filepath}`);
+  } catch (err) {
+    console.error('CRITICAL: Failed to write failed batch to file!', err);
+  }
+}
+
 export async function flushNow() {
   if (flushing || queue.length === 0) {
     return;
@@ -101,13 +119,12 @@ export async function flushNow() {
   } catch (error) {
     console.error('Failed to flush request log batch:', error);
 
-    queue.unshift(...batch);
-    trimQueueIfNeeded();
+    await writeFailedBatchToFile(batch);
   } finally {
     flushing = false;
 
     if (queue.length >= maxBatchSize) {
-      void flushNow();
+      setTimeout(() => { void flushNow(); }, 0);
     }
   }
 }

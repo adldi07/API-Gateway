@@ -5,10 +5,13 @@
   "scripts": {
     "dev:gateway": "npm run dev --workspace @api-gateway/gateway",
     "build:gateway": "npm run build --workspace @api-gateway/gateway",
-    "migrate:gateway": "npm run migrate --workspace @api-gateway/gateway"
+    "migrate:gateway": "npm run migrate --workspace @api-gateway/gateway",
+    "dev:dashboard": "npm run dev --workspace @api-gateway/dashboard",
+    "build:dashboard": "npm run build --workspace @api-gateway/dashboard"
   },
   "workspaces": [
     "gateway",
+    "dashboard",
     "shared"
   ],
   "keywords": [],
