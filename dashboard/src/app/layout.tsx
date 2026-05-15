@@ -40,6 +40,7 @@ export default function RootLayout({
               <Link className="tab-link" href="/">Overview</Link>
               <Link className="tab-link" href="/api-keys">API Keys</Link>
               <Link className="tab-link" href="/rate-limits">Rate Limits</Link>
+              <Link className="tab-link" href="/routes">Routes</Link>
               <Link className="tab-link" href="/logs">Logs</Link>
             </nav>
           </header>

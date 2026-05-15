@@ -120,3 +120,33 @@ export async function fetchLogs(params: {
 export async function fetchSummary() {
   return request<AnalyticsSummary>("/analytics/summary");
 }
+
+// ── Upstream Routes ──────────────────────────────────────────────────
+
+export type UpstreamRoute = {
+  id: string;
+  path_prefix: string;
+  target_url: string;
+  strip_prefix: boolean;
+  is_active: boolean;
+  created_at: string;
+};
+
+export async function fetchRoutes() {
+  return request<{ data: UpstreamRoute[] }>("/routes");
+}
+
+export async function createRoute(payload: {
+  path_prefix: string;
+  target_url: string;
+  strip_prefix?: boolean;
+}) {
+  return request<{ data: UpstreamRoute }>("/routes", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteRoute(id: string) {
+  return request<void>(`/routes/${id}`, { method: "DELETE" });
+}
